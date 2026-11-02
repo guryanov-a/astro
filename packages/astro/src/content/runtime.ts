@@ -92,6 +92,20 @@ async function parseLiveEntry(
 	}
 }
 
+/** Marks entries read with `{ content: false }`, which `render()` rejects. */
+const ENTRY_WITHOUT_CONTENT = Symbol.for('astro:entry-without-content');
+
+interface ReadOptions {
+	content?: boolean;
+}
+
+function markWithoutContent<T extends object>(entry: T, options: ReadOptions | undefined): T {
+	if (options?.content === false) {
+		Object.defineProperty(entry, ENTRY_WITHOUT_CONTENT, { value: true, enumerable: false });
+	}
+	return entry;
+}
+
 export function createGetCollection({
 	liveCollections,
 	logger,
@@ -102,6 +116,7 @@ export function createGetCollection({
 	return async function getCollection(
 		collection: string,
 		filter?: ((entry: any) => unknown) | Record<string, unknown>,
+		options?: ReadOptions,
 	) {
 		if (collection in liveCollections) {
 			throw new AstroError({
@@ -117,7 +132,7 @@ export function createGetCollection({
 			const { default: imageAssetMap } = await import('astro:asset-imports');
 
 			const result = [];
-			for (const rawEntry of await store.values<DataEntry>(collection)) {
+			for (const rawEntry of await store.values(collection, options)) {
 				const data = resolveEntryData(rawEntry, imageAssetMap);
 
 				let entry = {
@@ -129,7 +144,7 @@ export function createGetCollection({
 				if (hasFilter && !filter(entry)) {
 					continue;
 				}
-				result.push(entry);
+				result.push(markWithoutContent(entry, options));
 			}
 			return result;
 		} else {
@@ -175,18 +190,23 @@ export function createGetEntry({
 		// Or pass a single object with the collection and identifier as properties.
 		// This means the first positional arg can have different shapes.
 		collectionOrLookupObject: string | EntryLookupObject,
-		lookup?: string | Record<string, unknown>,
+		lookupOrOptions?: string | Record<string, unknown>,
+		entryOptions?: ReadOptions,
 	): Promise<ContentEntryResult | DataEntryResult | undefined> {
 		let collection: string, lookupId: string | Record<string, unknown>;
+		let options: ReadOptions | undefined;
 		if (typeof collectionOrLookupObject === 'string') {
 			collection = collectionOrLookupObject;
-			if (!lookup)
+			if (!lookupOrOptions)
 				throw new AstroError({
 					...AstroErrorData.UnknownContentCollectionError,
 					message: '`getEntry()` requires an entry identifier as the second argument.',
 				});
-			lookupId = lookup;
+			lookupId = lookupOrOptions;
+			options = entryOptions;
 		} else {
+			// With a reference, the second argument holds the options
+			options = lookupOrOptions as ReadOptions | undefined;
 			collection = collectionOrLookupObject.collection;
 			// Identifier could be `slug` for content entries, or `id` for data entries
 			lookupId =
@@ -210,7 +230,7 @@ export function createGetEntry({
 		const store = await globalDataStore.get();
 
 		if (await store.hasCollection(collection)) {
-			const entry = await store.get<DataEntry>(collection, lookupId);
+			const entry = await store.get(collection, lookupId, options);
 			if (!entry) {
 				logger.warn('content', `Entry ${collection} → ${lookupId} was not found.`);
 				return;
@@ -238,7 +258,7 @@ export function createGetEntry({
 				'render',
 				`[content] Invalid attempt to access "render()" method on "${collection}" entry.\nTo render an entry, use "render(entry)" from "astro:content".`,
 			);
-			return result;
+			return markWithoutContent(result, options);
 		}
 
 		return undefined;
@@ -268,8 +288,9 @@ function warnForPropertyAccess(logger: AstroLogger, entry: object, prop: string,
 export function createGetEntries(getEntry: ReturnType<typeof createGetEntry>) {
 	return async function getEntries(
 		entries: { collection: string; id: string }[] | { collection: string; slug: string }[],
+		options?: ReadOptions,
 	) {
-		return Promise.all(entries.map((e) => getEntry(e)));
+		return Promise.all(entries.map((e) => getEntry(e, options as Record<string, unknown>)));
 	};
 }
 
@@ -629,6 +650,15 @@ export function createRenderEntry({ logger }: { logger: AstroLogger }) {
 	return async function renderEntry(entry: DataEntry) {
 		if (!entry) {
 			throw new AstroError(AstroErrorData.RenderUndefinedEntryError);
+		}
+		if (ENTRY_WITHOUT_CONTENT in entry) {
+			throw new AstroError({
+				...AstroErrorData.RenderEntryWithoutContentError,
+				message: AstroErrorData.RenderEntryWithoutContentError.message(
+					(entry as { collection?: string }).collection ?? '',
+					entry.id,
+				),
+			});
 		}
 		recordContentEntryRender(entry.filePath);
 

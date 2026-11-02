@@ -2179,6 +2179,22 @@ export const CollectionStorageFormatMismatch = {
 
 /**
  * @docs
+ * @message
+ * **Example error message:**<br/>
+ * The entry `intro` of the collection `docs` was read with `{ content: false }`, so it can't be rendered.
+ * @description
+ * Entries read with `{ content: false }` don't include the content needed to render them. Read the entry without this option, for example with `getEntry()`, before passing it to `render()`.
+ */
+export const RenderEntryWithoutContentError = {
+	name: 'RenderEntryWithoutContentError',
+	title: 'Attempted to render an entry read without its content.',
+	message: (collection: string, id: string) =>
+		`The entry \`${id}\` of the collection \`${collection}\` was read with \`{ content: false }\`, so it can't be rendered.`,
+	hint: 'Pass the entry returned by `getEntry(collection, id)` to `render()` instead.',
+} satisfies ErrorData;
+
+/**
+ * @docs
  * @kind heading
  * @name Action Errors
  */
