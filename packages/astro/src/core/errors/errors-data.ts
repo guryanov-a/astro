@@ -2115,6 +2115,38 @@ export const FileGlobNotSupported = {
 
 /**
  * @docs
+ * @message
+ * **Example error message:**<br/>
+ * The collection `docs` sets the `storage` option, but collection storage drivers aren't enabled.
+ * @description
+ * A collection sets the `storage` option, but the `experimental.collectionStorageDrivers` flag is not enabled. Enable the flag in your Astro config, or remove the `storage` option to keep the collection bundled with your site.
+ */
+export const CollectionStorageDriversNotEnabled = {
+	name: 'CollectionStorageDriversNotEnabled',
+	title: 'Collection storage drivers are not enabled.',
+	message: (collection: string) =>
+		`The collection \`${collection}\` sets the \`storage\` option, but collection storage drivers aren't enabled.`,
+	hint: 'Set `experimental.collectionStorageDrivers` to `true` in your Astro config, or remove the `storage` option from the collection.',
+} satisfies ErrorData;
+
+/**
+ * @docs
+ * @message
+ * **Example error message:**<br/>
+ * The storage of the collection `docs` has an option that can't be serialized to JSON: `config.url`.
+ * @description
+ * The options passed to a collection storage driver are written into your build, so they must be JSON-serializable: strings, finite numbers, booleans, `null`, arrays and plain objects. Pass other values, such as a `URL`, as strings, and read secrets from environment variables in the driver instead of passing them as options.
+ */
+export const InvalidCollectionStorageConfig = {
+	name: 'InvalidCollectionStorageConfig',
+	title: 'Invalid collection storage options.',
+	message: (collection: string, path: string) =>
+		`The storage of the collection \`${collection}\` has an option that can't be serialized to JSON: \`${path}\`.`,
+	hint: 'Storage driver options must be strings, finite numbers, booleans, `null`, arrays or plain objects.',
+} satisfies ErrorData;
+
+/**
+ * @docs
  * @kind heading
  * @name Action Errors
  */
