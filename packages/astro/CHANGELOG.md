@@ -1,5 +1,17 @@
 # astro
 
+## 7.4.6
+
+### Patch Changes
+
+- [#18589](https://github.com/withastro/astro/pull/18589) [`402c0fa`](https://github.com/withastro/astro/commit/402c0fae01d251c97298c255804008ff566802f9) Thanks [@astro-factory](https://github.com/apps/astro-factory)! - Fixes `astro check` exiting with code 0 when `@astrojs/check` or `typescript` is not installed. The command now exits with code 1 so CI fails instead of silently skipping type checking.
+
+- [#18503](https://github.com/withastro/astro/pull/18503) [`54fcdd5`](https://github.com/withastro/astro/commit/54fcdd5dedc982a77f1590e26247d57dd1802da9) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - Preserves the last-modified date of cached font files and unchanged public files when copying them into the build output. Public-file timestamp preservation respects the resolved public-directory configuration, follows source symlinks, and avoids backdating files overwritten by build plugins.
+
+- [#18432](https://github.com/withastro/astro/pull/18432) [`ed60d82`](https://github.com/withastro/astro/commit/ed60d82935d5768c3fcf67ce508e1f4edbfe25d6) Thanks [@alexmv](https://github.com/alexmv)! - Improves the `MissingSharp` error to include the reason Sharp failed to load, such as its prebuilt binaries not supporting the current CPU
+
+- [#18574](https://github.com/withastro/astro/pull/18574) [`da0f149`](https://github.com/withastro/astro/commit/da0f149de58001fa5564d083acbae34e7b4a1b1f) Thanks [@astro-factory](https://github.com/apps/astro-factory)! - Fixes an unnecessary full page reload in `astro dev` when a content loader calls `store.clear()` or `store.delete()` and the content store has no asset imports
+
 ## 7.4.5
 
 ### Patch Changes
