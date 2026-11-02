@@ -2147,6 +2147,22 @@ export const InvalidCollectionStorageConfig = {
 
 /**
  * @docs
+ * @message
+ * **Example error message:**<br/>
+ * The entry `intro` of the collection `docs` was written by a different version of Astro.
+ * @description
+ * A collection storage driver returned an entry that Astro can't read, because it was written in a different format. Astro only reads a snapshot written by the same build. Check that the driver returns entries from the snapshot it was asked for.
+ */
+export const CollectionStorageFormatMismatch = {
+	name: 'CollectionStorageFormatMismatch',
+	title: 'Collection storage entry has an unknown format.',
+	message: (collection: string, id: string) =>
+		`The entry \`${id}\` of the collection \`${collection}\` was written by a different version of Astro.`,
+	hint: 'Rebuild your site, and check that the storage driver returns entries from the snapshot it was asked for.',
+} satisfies ErrorData;
+
+/**
+ * @docs
  * @kind heading
  * @name Action Errors
  */

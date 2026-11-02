@@ -125,3 +125,44 @@ export function createMarkdownEntryType(
 		},
 	};
 }
+
+/**
+ * Creates a collection storage driver that keeps snapshots in memory. `snapshots` exposes the
+ * committed snapshots, keyed by snapshot ID, then by collection, then by entry ID.
+ */
+export function createMemoryStorageDriver() {
+	const snapshots = new Map<string, Map<string, Map<string, any>>>();
+	const driver = {
+		snapshots,
+		async openWriter({ snapshot }: { snapshot: string }) {
+			const pending = new Map<string, Map<string, any>>();
+			return {
+				async write(collection: string, entries: AsyncIterable<any>) {
+					const stored = new Map<string, any>();
+					for await (const entry of entries) stored.set(entry.id, entry);
+					pending.set(collection, stored);
+				},
+				async commit() {
+					snapshots.set(snapshot, pending);
+				},
+			};
+		},
+		async openReader({ snapshot }: { snapshot: string }) {
+			const read = (collection: string) => snapshots.get(snapshot)?.get(collection);
+			const withoutContent = ({ content: _content, ...entry }: any) => entry;
+			return {
+				async get(collection: string, id: string, { content }: { content: boolean }) {
+					const entry = read(collection)?.get(id);
+					if (!entry) return undefined;
+					return content ? entry : withoutContent(entry);
+				},
+				async *entries(collection: string, { content }: { content: boolean }) {
+					for (const entry of read(collection)?.values() ?? []) {
+						yield content ? entry : withoutContent(entry);
+					}
+				},
+			};
+		},
+	};
+	return driver;
+}
