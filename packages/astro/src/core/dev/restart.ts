@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 import { globalContentLayer } from '../../content/instance.js';
 import { attachContentServerListeners } from '../../content/server-listeners.js';
+import { createDriverLoader } from '../../content/storage-sync.js';
+import { ASTRO_VITE_ENVIRONMENT_NAMES } from '../constants.js';
 import { eventCliSession, telemetry } from '../../events/index.js';
 import { runHookConfigDone, runHookConfigSetup } from '../../integrations/hooks.js';
 import { SETTINGS_FILE } from '../../preferences/constants.js';
@@ -250,6 +252,11 @@ export async function createContainerWithAutomaticRestart({
 			logger,
 			watcher: restart.container.viteServer.watcher,
 			store: previousContentLayer.store,
+			loadStorageDriver: createDriverLoader(
+				restart.container.viteServer.environments[
+					ASTRO_VITE_ENVIRONMENT_NAMES.astro
+				] as vite.RunnableDevEnvironment,
+			),
 		});
 		contentLayer.watchContentConfig();
 		// A loader error must not reject the watcher callback that triggered the

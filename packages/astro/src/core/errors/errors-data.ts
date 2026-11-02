@@ -2149,6 +2149,22 @@ export const InvalidCollectionStorageConfig = {
  * @docs
  * @message
  * **Example error message:**<br/>
+ * Could not use the collection storage driver `my-driver`. Its entrypoint must default-export a function that creates the driver.
+ * @description
+ * The entrypoint of a collection storage driver must be a package specifier or the URL of a module whose default export is a function returning the driver. The driver must implement `openWriter()` and `openReader()`.
+ */
+export const InvalidCollectionStorageDriver = {
+	name: 'InvalidCollectionStorageDriver',
+	title: 'Invalid collection storage driver.',
+	message: (entrypoint: string, reason: string) =>
+		`Could not use the collection storage driver \`${entrypoint}\`. ${reason}`,
+	hint: 'Check that the driver package is installed, and that the `storage` option of your collection uses the function the driver package provides.',
+} satisfies ErrorData;
+
+/**
+ * @docs
+ * @message
+ * **Example error message:**<br/>
  * The entry `intro` of the collection `docs` was written by a different version of Astro.
  * @description
  * A collection storage driver returned an entry that Astro can't read, because it was written in a different format. Astro only reads a snapshot written by the same build. Check that the driver returns entries from the snapshot it was asked for.

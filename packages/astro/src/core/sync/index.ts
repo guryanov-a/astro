@@ -3,13 +3,21 @@ import { dirname, relative } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import colors from 'piccolore';
-import { createServer, type FSWatcher, type HotPayload, type ViteDevServer } from 'vite';
+import {
+	createServer,
+	type FSWatcher,
+	type HotPayload,
+	type RunnableDevEnvironment,
+	type ViteDevServer,
+} from 'vite';
 import { syncFonts } from '../../assets/fonts/sync.js';
 import { CONTENT_TYPES_FILE } from '../../content/consts.js';
 import { getDataStoreChunkSize, getDataStoreDir, getDataStoreFile } from '../../content/paths.js';
 import { globalContentLayer } from '../../content/instance.js';
 import { createContentTypesGenerator } from '../../content/index.js';
 import { MutableDataStore } from '../../content/mutable-data-store.js';
+import { createDriverLoader } from '../../content/storage-sync.js';
+import { ASTRO_VITE_ENVIRONMENT_NAMES } from '../constants.js';
 import { getContentPaths, globalContentConfigObserver } from '../../content/utils.js';
 import { syncAstroEnv } from '../../env/sync.js';
 import { telemetry } from '../../events/index.js';
@@ -170,6 +178,9 @@ export async function syncInternal({
 				logger,
 				store,
 				watcher,
+				loadStorageDriver: createDriverLoader(
+					tempViteServer.environments[ASTRO_VITE_ENVIRONMENT_NAMES.astro] as RunnableDevEnvironment,
+				),
 			});
 			if (watcher) {
 				contentLayer.watchContentConfig();

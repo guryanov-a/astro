@@ -9,6 +9,8 @@ import { getDataStoreChunkSize, getDataStoreDir, getDataStoreFile } from '../../
 import { globalContentLayer } from '../../content/instance.js';
 import { attachContentServerListeners, attachDataStoreInvalidation } from '../../content/index.js';
 import { MutableDataStore } from '../../content/mutable-data-store.js';
+import { createDriverLoader } from '../../content/storage-sync.js';
+import { ASTRO_VITE_ENVIRONMENT_NAMES } from '../constants.js';
 import { globalContentConfigObserver } from '../../content/utils.js';
 import { telemetry } from '../../events/index.js';
 import type { AstroInlineConfig } from '../../types/public/config.js';
@@ -123,6 +125,11 @@ export default async function dev(inlineConfig: AstroInlineConfig): Promise<DevS
 			logger,
 			watcher: restart.container.viteServer.watcher,
 			store,
+			loadStorageDriver: createDriverLoader(
+				restart.container.viteServer.environments[
+					ASTRO_VITE_ENVIRONMENT_NAMES.astro
+				] as vite.RunnableDevEnvironment,
+			),
 		});
 		contentLayer.watchContentConfig();
 		await contentLayer.sync();
